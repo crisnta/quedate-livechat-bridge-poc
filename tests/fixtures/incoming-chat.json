@@ -1,0 +1,28 @@
+{
+  "secret_key": "synthetic-secret-only",
+  "organization_id": "synthetic-org",
+  "webhook_id": "synthetic-chat-hook",
+  "action": "incoming_chat",
+  "payload": {
+    "chat": {
+      "id": "CHAT_SYNTH_001",
+      "users": [
+        {
+          "id": "CUSTOMER_SYNTH_001",
+          "type": "customer"
+        },
+        {
+          "id": "AGENT_SYNTH_001",
+          "type": "agent"
+        }
+      ],
+      "thread": {
+        "id": "THREAD_SYNTH_001",
+        "access": {
+          "group_ids": [999999]
+        },
+        "events": []
+      }
+    }
+  }
+}

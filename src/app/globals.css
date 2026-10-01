@@ -1,0 +1,83 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f4f6f8;
+  color: #17262d;
+  font:
+    15px/1.55 system-ui,
+    sans-serif;
+}
+main {
+  max-width: 1050px;
+  margin: 40px auto;
+  padding: 0 24px;
+}
+h1 {
+  font-size: 26px;
+}
+h2 {
+  font-size: 20px;
+}
+article {
+  background: white;
+  border: 1px solid #cbd5dc;
+  padding: 20px;
+  margin: 16px 0;
+}
+.event-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+dl {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  margin: 12px 0;
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+dt {
+  color: #50616c;
+}
+a {
+  color: #006c78;
+}
+input,
+button {
+  font: inherit;
+  padding: 8px;
+  border: 1px solid #7c939f;
+  margin-right: 8px;
+}
+button {
+  cursor: pointer;
+}
+.notice {
+  padding: 12px;
+  border-left: 4px solid #a66800;
+  background: #fff4d9;
+}
+.error {
+  color: #a02920;
+}
+.message {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #e8eef2;
+  padding: 18px;
+}
+form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}

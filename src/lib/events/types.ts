@@ -1,0 +1,46 @@
+export type AuthorType = "customer" | "agent" | "system" | "unknown";
+export type InternalChatEvent = {
+  version: 1;
+  source: "livechat";
+  organization_id: string;
+  action: "incoming_chat" | "incoming_event";
+  chat_id: string | null;
+  thread_id: string | null;
+  event_id: string | null;
+  event_type: string | null;
+  author: { id: string | null; type: AuthorType };
+  content: { text: string | null };
+  created_at: string | null;
+  received_at: string;
+};
+export type Normalized = {
+  event: InternalChatEvent;
+  webhook_id: string;
+  raw_payload: Record<string, unknown>;
+  deduplication_key: string;
+  normalization_status: "normalized" | "pending_context" | "unsupported_shape";
+  normalization_errors: string[];
+  context: null | { users: Record<string, AuthorType>; groups: number[] };
+};
+export type EventRow = {
+  id: string;
+  organization_id: string;
+  webhook_id: string;
+  action: string;
+  chat_id: string | null;
+  thread_id: string | null;
+  event_id: string | null;
+  event_type: string | null;
+  author_id: string | null;
+  author_type: AuthorType;
+  text: string | null;
+  created_at: Date | string | null;
+  received_at: Date | string;
+  raw_payload: unknown;
+  deduplication_key: string;
+  delivery_count: number;
+  last_received_at: Date | string;
+  normalization_status: string;
+  normalization_errors: string[];
+  normalization_version: number;
+};

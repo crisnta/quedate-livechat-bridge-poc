@@ -1,0 +1,17 @@
+{
+  "secret_key": "synthetic-secret-only",
+  "organization_id": "synthetic-org",
+  "webhook_id": "synthetic-event-hook",
+  "action": "incoming_event",
+  "payload": {
+    "chat_id": "CHAT_SYNTH_001",
+    "thread_id": "THREAD_SYNTH_001",
+    "event": {
+      "id": "EVENT_SYNTH_001",
+      "type": "message",
+      "author_id": "CUSTOMER_SYNTH_001",
+      "text": "PRUEBA WEBHOOK 001",
+      "created_at": "2026-09-30T12:31:08.123456Z"
+    }
+  }
+}
