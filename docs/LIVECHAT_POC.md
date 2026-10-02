@@ -55,7 +55,7 @@ Criterios pendientes: demostrar alcance de la suscripción, ruta del widget, per
 
 1. Crear la app privada del POC para LiveChat en Developer Console.
 2. Revisar los permisos mínimos y el bloque de autorización.
-3. Confirmar el flujo de instalación privada; si exige callback/intercambio OAuth, planificar esa configuración antes de instalar. No se implementa un callback supuesto.
+3. Confirmar el flujo de instalación privada; si exige callback/intercambio OAuth, planificar esa configuración antes de instalar. El callback mínimo está implementado en `/api/livechat/oauth/callback`; configuración y límites en [LIVECHAT_OAUTH.md](LIVECHAT_OAUTH.md).
 4. Configurar Chat Webhooks de tipo `license`, solo después de validar aislamiento.
 5. Instalar de forma privada en la licencia aprobada y verificar estado habilitado.
 
@@ -189,3 +189,7 @@ El futuro agente IA consumiría `InternalChatEvent v1`, no JSON LiveChat. Antes 
 - [ACK y reintentos](https://platform.text.com/docs/guides/livechat-apps/)
 - [Supabase: conexiones PostgreSQL](https://supabase.com/docs/guides/database/connecting-to-postgres)
 - [Next.js Proxy](https://nextjs.org/docs/app/api-reference/file-conventions/proxy)
+
+## 24. Actualización OAuth de instalación (2026-10-01)
+
+Se agregó el callback server-side de autorización y las variables `LIVECHAT_CLIENT_ID`, `LIVECHAT_CLIENT_SECRET`, `LIVECHAT_OAUTH_REDIRECT_URI`. El intercambio usa el endpoint oficial de tokens, muestra únicamente la organización recibida y descarta los tokens. No se cambiaron receptor, tablas ni laboratorio. Ver [LIVECHAT_OAUTH.md](LIVECHAT_OAUTH.md). La configuración real y el aislamiento siguen pendientes.

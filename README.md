@@ -79,3 +79,23 @@ La protección global de Vercel puede bloquear las pruebas de POST: configurar e
 ## Estado y siguientes pasos
 
 Implementación y pruebas sintéticas locales; conexión a Supabase, despliegue Vercel y payloads reales pendientes de ejecución por el responsable de las cuentas. Seguir [la documentación técnica](docs/LIVECHAT_POC.md) para evidencias, límites y configuración manual de LiveChat.
+
+## Instalación privada: callback OAuth de LiveChat
+
+Se agregó `GET /api/livechat/oauth/callback` para la app **Server-side**. Configurar en el servidor:
+
+```dotenv
+LIVECHAT_CLIENT_ID=
+LIVECHAT_CLIENT_SECRET=
+LIVECHAT_OAUTH_REDIRECT_URI=https://quedate-livechat-bridge-poc.vercel.app/api/livechat/oauth/callback
+```
+
+En Developer Console, configurar esa misma URL como **Direct installation URL** y en **Redirect URI whitelist**. El usuario inicia **Private installation → Install app**; LiveChat redirige al callback con un `code` de un solo uso. El servidor lo intercambia por tokens usando POST form-urlencoded a `https://accounts.livechat.com/v2/token`.
+
+La respuesta muestra autorización exitosa y el `organization_id` recibido desde el endpoint de tokens. Anotar ese ID manualmente en `LIVECHAT_ORGANIZATION_ID`, sin copiar tokens. El callback no modifica variables ni consulta PostgreSQL. No se requieren las credenciales del laboratorio para abrirlo.
+
+**No se conservan access_token ni refresh_token.** Los Chat Webhooks de Developer Console se habilitan con la instalación/autorización y sus entregas usan `secret_key`. Como este POC no llama a APIs de LiveChat después de autorizar, almacenar/renovar tokens no aporta funcionalidad. Si en una fase futura se necesitan esas APIs, se diseñará almacenamiento seguro y renovación por separado.
+
+La autorización exitosa no prueba el aislamiento ni la recepción. Instalar una app con suscripciones ya configuradas puede habilitarlas: mantener el requisito bloqueante de aislamiento antes de instalar contra la operación real. Este cambio no registra ni activa suscripciones por código.
+
+Pruebas OAuth usan respuestas simuladas y credenciales sintéticas; no realizan llamadas a LiveChat. Ver [docs/LIVECHAT_OAUTH.md](docs/LIVECHAT_OAUTH.md) para configuración, límites y referencias.

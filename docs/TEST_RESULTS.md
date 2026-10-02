@@ -27,3 +27,10 @@ El primer intento dentro del sandbox no pudo abrir el puerto local (`EPERM`); lo
 - Aislamiento del tráfico de pruebas: **BLOQUEANTE para activación real**.
 
 No se afirma recepción real ni aceptación contra Supabase. La siguiente evidencia necesaria es ejecutar `fixtures:send` contra el despliegue conectado al proyecto Supabase y registrar el resultado sin secretos.
+
+## Actualización OAuth — 2026-10-01
+
+- `npm test`: **39 tests aprobados** en dos archivos (24 existentes + 15 casos OAuth).
+- `npm run build`: aprobado, incluyendo TypeScript y la nueva ruta dinámica `/api/livechat/oauth/callback`.
+- Los tests OAuth simulan el endpoint de tokens; no se conectaron a LiveChat ni usaron credenciales reales.
+- No se ejecutó una instalación real ni se observaron tokens/organización de la cuenta. La configuración en Developer Console y Vercel es manual y permanece pendiente.
