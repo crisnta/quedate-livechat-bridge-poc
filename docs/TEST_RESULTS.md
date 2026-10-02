@@ -34,3 +34,10 @@ No se afirma recepción real ni aceptación contra Supabase. La siguiente eviden
 - `npm run build`: aprobado, incluyendo TypeScript y la nueva ruta dinámica `/api/livechat/oauth/callback`.
 - Los tests OAuth simulan el endpoint de tokens; no se conectaron a LiveChat ni usaron credenciales reales.
 - No se ejecutó una instalación real ni se observaron tokens/organización de la cuenta. La configuración en Developer Console y Vercel es manual y permanece pendiente.
+
+## Diagnóstico OAuth temporal — 2026-10-01
+
+- `npm test`: **49 tests aprobados** (24 del Bridge + 25 OAuth).
+- `npm run build`: aprobado, incluido TypeScript.
+- Tests adicionales: HTTP status/error/error_description, presencia de variables, redirect seguro, rechazo de cuerpos no JSON/excesivos, escape HTML y redacción de valores conocidos/credenciales repetidos en errores.
+- Las respuestas del proveedor son simuladas; no se probó el error de la cuenta real ni se usaron secretos reales.

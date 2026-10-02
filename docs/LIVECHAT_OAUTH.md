@@ -34,7 +34,7 @@ Se toma del JSON devuelto por el endpoint de tokens y se muestra escapado en la 
 - 503: variables OAuth incompletas o URI inválido.
 - 502: rechazo del intercambio, respuesta malformada, timeout o fallo de red. Iniciar nueva autorización; no reintentar automáticamente un código consumido.
 
-Fetch con timeout de diez segundos, sin caché y sin seguir redirects. Ningún cuerpo de error del proveedor ni excepción se refleja o registra. No se muestra client secret, access token, refresh token ni código. HTML escapado, política CSP restrictiva, `Cache-Control: no-store`, `Referrer-Policy: no-referrer` y no indexación.
+Fetch con timeout de diez segundos, sin caché y sin seguir redirects. El cuerpo completo de error del proveedor y las excepciones no se reflejan ni registran. El diagnóstico temporal descrito abajo muestra únicamente los campos permitidos y redactados. No se muestra client secret, access token, refresh token ni código. HTML escapado, política CSP restrictiva, `Cache-Control: no-store`, `Referrer-Policy: no-referrer` y no indexación.
 
 El callback es público para permitir el redirect de instalación; Basic sigue limitado al laboratorio. No crea sesiones, no vincula identidades ni modifica configuración. Es un callback mínimo del flujo directo iniciado por LiveChat. No se implementa un iniciador propio ni correlación `state`/PKCE. La guía documenta PKCE como opción para servidor confidencial y recomienda `state` al iniciar autorización. Si se añade inicio propio, login o vinculación persistente, se debe incorporar protección de correlación antes de ese uso. No reutilizar este callback como autenticación de usuarios.
 
@@ -50,3 +50,13 @@ Pendiente: configurar variables privadas en Vercel, desplegar y ejecutar instala
 
 - [Authorization code grant: parámetros del intercambio, organización y opciones PKCE/state](https://platform.text.com/docs/authorization/oauth-authorization/)
 - [Chat Webhooks: server-side, Direct installation URL, instalación privada y habilitación automática](https://platform.text.com/docs/guides/console-guides/chat-webhooks)
+
+## Diagnóstico temporal del intercambio
+
+La pantalla muestra la presencia (sí/no) de `LIVECHAT_CLIENT_ID`, `LIVECHAT_CLIENT_SECRET` y `LIVECHAT_OAUTH_REDIRECT_URI`, y el redirect URI efectivo. Nunca muestra los valores del Client ID o Client Secret. Un URI malformado o con credenciales/query/fragmento se omite para evitar filtraciones.
+
+Si `/v2/token` responde con HTTP no exitoso, muestra únicamente el HTTP status del proveedor y, si son strings presentes en un JSON válido, `error` y `error_description`. Estos campos se escapan como texto y se redactan para quitar Client ID, Client Secret, el código y tokens devueltos/credenciales que puedan ser repetidos en el mensaje. No se muestra el cuerpo completo ni otros campos. El cuerpo se limita a 64 KiB y los valores diagnósticos a 1024 caracteres. Una respuesta no JSON o demasiado grande conserva únicamente su HTTP status.
+
+El diagnóstico se muestra en la respuesta del callback; **no se escribe en logs**. No se agregó PKCE ni se modificaron los parámetros del intercambio, el almacenamiento, el Bridge o el laboratorio. No se añadió ninguna variable. Retirar este diagnóstico temporal después de resolver la instalación.
+
+La pantalla sigue devolviendo 502 cuando el proveedor rechaza el intercambio; el HTTP status mostrado corresponde al proveedor, no al status del callback. Un fallo de red no tiene HTTP status del proveedor que reportar.

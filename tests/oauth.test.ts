@@ -157,3 +157,153 @@ describe("LiveChat server-side OAuth callback", () => {
     expect(() => oauthConfig()).toThrow();
   });
 });
+
+describe("Temporary safe OAuth diagnostics", () => {
+  it.each(["invalid_client", "invalid_grant", "invalid_request"])(
+    "shows HTTP status and provider error %s with configuration presence",
+    async (providerError) => {
+      const fetchToken = vi.fn<typeof fetch>().mockResolvedValue(
+        Response.json(
+          {
+            error: providerError,
+            error_description: "Redirect URI does not match",
+            ignored: "NEVER_DISPLAY",
+          },
+          { status: 400 },
+        ),
+      );
+      const response = await createOAuthCallback(
+        () => config,
+        fetchToken,
+      )(request("?code=diagnostic-code"));
+      expect(response.status).toBe(502);
+      const html = await response.text();
+      expect(html).toContain("HTTP status</dt><dd>400");
+      expect(html).toContain(providerError);
+      expect(html).toContain("Redirect URI does not match");
+      for (const name of [
+        "LIVECHAT_CLIENT_ID",
+        "LIVECHAT_CLIENT_SECRET",
+        "LIVECHAT_OAUTH_REDIRECT_URI",
+      ])
+        expect(html).toContain(`${name} configurado</dt><dd>sí`);
+      expect(html).toContain(config.redirectUri);
+      for (const forbidden of [
+        config.clientId,
+        config.clientSecret,
+        "diagnostic-code",
+        "NEVER_DISPLAY",
+      ])
+        expect(html).not.toContain(forbidden);
+    },
+  );
+  it("redacts credentials/code and token fields echoed inside descriptions, including encoded values", async () => {
+    const code = "sensitive-code:/+value";
+    const description = `${config.clientId} ${config.clientSecret} ${code} ${encodeURIComponent(code)} ${tokens.access_token} ${tokens.refresh_token} access_token=unknown-echo refresh_token=unknown-refresh`;
+    const fetchToken = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
+          error: "invalid_grant",
+          error_description: description,
+          ...tokens,
+          code,
+        },
+        { status: 400 },
+      ),
+    );
+    const response = await createOAuthCallback(
+      () => config,
+      fetchToken,
+    )(request("?code=" + encodeURIComponent(code)));
+    const html = await response.text();
+    expect(html).toContain("invalid_grant");
+    expect(html).toContain("[REDACTED]");
+    for (const secret of [
+      config.clientId,
+      config.clientSecret,
+      code,
+      encodeURIComponent(code),
+      tokens.access_token,
+      tokens.refresh_token,
+      "unknown-echo",
+      "unknown-refresh",
+    ])
+      expect(html).not.toContain(secret);
+  });
+  it("escapes provider error text and ignores non-string diagnostic fields", async () => {
+    const fetchToken = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json(
+        {
+          error: { nested: "DO_NOT_RENDER" },
+          error_description: '<script>alert("x")</script>',
+        },
+        { status: 401 },
+      ),
+    );
+    const html = await (
+      await createOAuthCallback(
+        () => config,
+        fetchToken,
+      )(request("?code=diagnostic-code"))
+    ).text();
+    expect(html).toContain("HTTP status</dt><dd>401");
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("DO_NOT_RENDER");
+  });
+  it.each(["<html>UNSAFE_BODY</html>", "{", "x".repeat(65537)])(
+    "keeps HTTP status when the error body cannot be safely parsed",
+    async (body) => {
+      const fetchToken = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(new Response(body, { status: 500 }));
+      const html = await (
+        await createOAuthCallback(
+          () => config,
+          fetchToken,
+        )(request("?code=diagnostic-code"))
+      ).text();
+      expect(html).toContain("HTTP status</dt><dd>500");
+      expect(html).not.toContain("UNSAFE_BODY");
+      expect(html).not.toContain("x".repeat(1025));
+    },
+  );
+  it("reports absent variables without requesting the provider", async () => {
+    vi.stubEnv("LIVECHAT_CLIENT_ID", "");
+    vi.stubEnv("LIVECHAT_CLIENT_SECRET", "");
+    vi.stubEnv("LIVECHAT_OAUTH_REDIRECT_URI", "");
+    const fetchToken = vi.fn<typeof fetch>();
+    const html = await (
+      await createOAuthCallback(
+        oauthConfig,
+        fetchToken,
+      )(request("?code=diagnostic-code"))
+    ).text();
+    for (const name of [
+      "LIVECHAT_CLIENT_ID",
+      "LIVECHAT_CLIENT_SECRET",
+      "LIVECHAT_OAUTH_REDIRECT_URI",
+    ])
+      expect(html).toContain(`${name} configurado</dt><dd>no`);
+    expect(fetchToken).not.toHaveBeenCalled();
+  });
+  it("does not display credentials/query embedded in an invalid redirect URI", async () => {
+    vi.stubEnv("LIVECHAT_CLIENT_ID", config.clientId);
+    vi.stubEnv("LIVECHAT_CLIENT_SECRET", config.clientSecret);
+    vi.stubEnv(
+      "LIVECHAT_OAUTH_REDIRECT_URI",
+      `https://user:${config.clientSecret}@example.invalid/api/livechat/oauth/callback?code=diagnostic-code`,
+    );
+    const fetchToken = vi.fn<typeof fetch>();
+    const html = await (
+      await createOAuthCallback(
+        oauthConfig,
+        fetchToken,
+      )(request("?code=diagnostic-code"))
+    ).text();
+    expect(html).toContain("redirect_uri efectivo</dt><dd>No disponible");
+    expect(html).not.toContain(config.clientSecret);
+    expect(html).not.toContain("diagnostic-code");
+    expect(fetchToken).not.toHaveBeenCalled();
+  });
+});
