@@ -1,0 +1,92 @@
+export type Filters = {
+  from: string;
+  to: string;
+  chat: string;
+  group: string;
+  agent: string;
+  response: string;
+  sort: string;
+  page: number;
+};
+export type Conversation = {
+  chat_id: string;
+  first_seen: string;
+  last_seen: string;
+  messages: number;
+  agent_messages: number;
+  threads: number;
+  group_ids: number[];
+  agents: string[];
+  last_text?: string | null;
+  last_author?: string | null;
+};
+export type Page<T> = { items: T[]; hasMore: boolean; page: number };
+export type TechnicalEvent = {
+  id: string;
+  action: string;
+  chat_id: string | null;
+  thread_id: string | null;
+  event_id: string | null;
+  event_type: string | null;
+  author_type: string;
+  text: string | null;
+  created_at: string | null;
+  received_at: string;
+  webhook_id: string;
+  delivery_count: number;
+  normalization_status: string;
+  normalization_errors: string[];
+  normalization_version: number;
+};
+export type Overview = {
+  conversations: number;
+  threads: number;
+  messages: number;
+  customer_messages: number;
+  agent_messages: number;
+  unknown_messages: number;
+  unsupported: number;
+  pending: number;
+  repeated_deliveries: number;
+  with_agent: number;
+  without_agent: number;
+  daily: { bucket: string; chats: number; messages: number }[];
+  hourly: { bucket: string; chats: number; messages: number }[];
+  groups: { group_id: number; chats: number }[];
+};
+export type Health = {
+  revision: string;
+  last_webhook: string | null;
+  last_source_activity: string | null;
+  last_chat: string | null;
+  last_event: string | null;
+  coverage_start: string | null;
+  checked_at: string;
+};
+export type TimelineItem = {
+  key: string;
+  event_id: string | null;
+  thread_id: string | null;
+  type: string;
+  author_type: string;
+  text: string | null;
+  created_at: string | null;
+  received_at: string;
+  source: "webhook" | "initial_snapshot";
+  normalization_status: string;
+};
+export type ConversationDetail = {
+  chat_id: string;
+  threads: {
+    thread_id: string;
+    group_ids: number[];
+    users: Record<string, string>;
+  }[];
+  timeline: TimelineItem[];
+  hasMore: boolean;
+  page: number;
+  first_seen: string;
+  last_seen: string;
+  visitorAvailable: boolean;
+  observed: boolean;
+};

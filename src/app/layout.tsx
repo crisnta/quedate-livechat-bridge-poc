@@ -1,14 +1,12 @@
 import "./globals.css";
 export const metadata = {
-  title: "Quédate LiveChat Bridge POC",
+  title: { default: "Quédate · Centro Operacional", template: "%s · Quédate" },
   robots: { index: false, follow: false },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es">
-      <body>
-        <main>{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

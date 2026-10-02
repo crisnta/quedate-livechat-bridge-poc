@@ -33,9 +33,12 @@ export default async function Lab({
   return (
     <>
       <h1>Quédate LiveChat Bridge</h1>
+      <p>
+        <a href="/dashboard">Abrir Centro Operacional →</a>
+      </p>
       <p className="notice">
-        POC receptor · Solo datos ficticios. Activación real BLOQUEADA:
-        aislamiento de tráfico pendiente de verificar.
+        Laboratorio técnico · Acceso POC temporal. El JSON completo puede
+        contener datos personales; revisar únicamente sesiones autorizadas.
       </p>
       <form>
         <label>

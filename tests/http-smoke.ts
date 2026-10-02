@@ -139,13 +139,103 @@ try {
   assert(!(await filtered.text()).includes("PRUEBA WEBHOOK 001"));
   const bad = await post({ ...event, secret_key: "incorrect" });
   assert.equal(bad.status, 403);
+  // Every new route keeps temporary Basic protection; LiveChat routes remain separate.
+  const operationalRoutes = [
+    "/dashboard",
+    "/monitor",
+    "/conversations",
+    "/conversations/CHAT_SYNTH_001",
+    "/reports",
+    "/audit",
+    "/technical/events",
+    "/technical/events/" + id,
+    "/groups",
+    "/agents",
+    "/alerts",
+    "/categories",
+    "/ai",
+    "/protocols",
+  ];
+  for (const route of operationalRoutes) {
+    assert.equal(
+      (await fetch(base + route)).status,
+      401,
+      route + " must require authentication",
+    );
+    assert.equal(
+      (await fetch(base + route, { headers: auth })).status,
+      200,
+      route + " must render",
+    );
+  }
+  assert.equal((await fetch(base + "/api/operations/monitor")).status, 401);
+  assert.equal(
+    (await fetch(base + "/api/livechat/oauth/callback")).status,
+    400,
+  );
+  assert.equal(
+    (await fetch(base + "/api/operations/monitor?page=0", { headers: auth }))
+      .status,
+    400,
+  );
+  const params = "?from=2026-09-01&to=2026-10-31&selected=CHAT_SYNTH_001";
+  const snapshot = await fetch(base + "/api/operations/monitor" + params, {
+    headers: auth,
+  });
+  assert.equal(snapshot.status, 200);
+  const body = await snapshot.json();
+  assert.equal(body.conversations.items.length, 1);
+  assert.equal(body.detail.timeline.length, 2);
+  assert(!JSON.stringify(body).includes("raw_payload"));
+  assert(!JSON.stringify(body).includes("synthetic-secret-only"));
+  const unchanged = await fetch(base + "/api/operations/monitor" + params, {
+    headers: { ...auth, "If-None-Match": snapshot.headers.get("etag")! },
+  });
+  assert.equal(unchanged.status, 304);
+  assert(unchanged.headers.get("x-checked-at"));
+  // Visitor fields are only projected on explicit detail access, never lists/monitor.
+  await pool.query(
+    `UPDATE bridge.webhook_events SET raw_payload=jsonb_set(raw_payload,'{payload,chat,users,0,name}','"SYNTHETIC_PRIVATE_NAME"'::jsonb) WHERE action='incoming_chat'`,
+  );
+  const conversation = await fetch(base + "/conversations/CHAT_SYNTH_001", {
+    headers: auth,
+  });
+  assert(!(await conversation.text()).includes("SYNTHETIC_PRIVATE_NAME"));
+  const visible = await fetch(
+    base + "/conversations/CHAT_SYNTH_001?visitor=1",
+    { headers: auth },
+  );
+  assert((await visible.text()).includes("SYNTHETIC_PRIVATE_NAME"));
+  const markup = structuredClone(event);
+  markup.payload.event.id = "HTML_SYNTHETIC";
+  markup.payload.event.text = "<img src=x onerror=alert(1)>";
+  assert.equal((await post(markup)).status, 200);
+  const escaped = await fetch(base + "/conversations/CHAT_SYNTH_001", {
+    headers: auth,
+  });
+  const escapedHtml = await escaped.text();
+  assert(!escapedHtml.includes("<img src=x onerror=alert(1)>"));
+  assert(escapedHtml.includes("&lt;img"));
+  const technical = await fetch(base + "/technical/events/" + id, {
+    headers: auth,
+  });
+  assert((await technical.text()).includes("REDACTED"));
   // PostgreSQL stopped, not just a mock rejection: no success ACK permitted.
   await pool.end();
   pool = undefined;
   await db.stop();
   assert.equal((await post(event)).status, 503);
+  assert.equal(
+    (await fetch(base + "/api/operations/monitor", { headers: auth })).status,
+    503,
+  );
+  assert(
+    (
+      await (await fetch(base + "/dashboard", { headers: auth })).text()
+    ).includes("No se pudo consultar PostgreSQL"),
+  );
   console.log(
-    "HTTP PASS: two fixtures → real Next endpoint → PostgreSQL → protected list/detail; duplicates, filter, secret redaction, 401, 403 and database-offline 503.",
+    "HTTP PASS: webhook flow unchanged; 14 operational pages protected and rendered; monitor 200/304/400/401/503; hidden visitor data, HTML escaping, technical redaction, duplicates and PostgreSQL-offline handling.",
   );
 } catch (e) {
   console.error(

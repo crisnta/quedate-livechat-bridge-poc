@@ -307,3 +307,66 @@ describe("Temporary safe OAuth diagnostics", () => {
     expect(fetchToken).not.toHaveBeenCalled();
   });
 });
+
+describe("Exact authorization-code exchange", () => {
+  it("sends one form request with the expected production redirect and unchanged parsed code", async () => {
+    const productionConfig = {
+      ...config,
+      redirectUri:
+        "https://quedate-livechat-bridge-poc.vercel.app/api/livechat/oauth/callback",
+    };
+    const syntheticCode = " dal:synthetic+/%= code ";
+    const fetchToken = vi
+      .fn<typeof fetch>()
+      .mockImplementation(async (url, options) => {
+        const outgoing = new Request(url, options);
+        expect(outgoing.method).toBe("POST");
+        expect(outgoing.headers.get("content-type")).toBe(
+          "application/x-www-form-urlencoded",
+        );
+        const body = new URLSearchParams(await outgoing.text());
+        expect(body.get("grant_type")).toBe("authorization_code");
+        expect(body.get("redirect_uri")).toBe(productionConfig.redirectUri);
+        expect(body.getAll("code")).toEqual([syntheticCode]);
+        expect([...body.keys()]).toEqual([
+          "grant_type",
+          "code",
+          "client_id",
+          "client_secret",
+          "redirect_uri",
+        ]);
+        return Response.json(tokens);
+      });
+    const incoming = new Request(
+      productionConfig.redirectUri +
+        "?code=" +
+        encodeURIComponent(syntheticCode),
+    );
+    expect(
+      (await createOAuthCallback(() => productionConfig, fetchToken)(incoming))
+        .status,
+    ).toBe(200);
+    expect(fetchToken).toHaveBeenCalledTimes(1);
+  });
+  it.each(["unauthorized_client", "network_failure"])(
+    "does not retry a failed exchange: %s",
+    async (failure) => {
+      const fetchToken = vi.fn<typeof fetch>();
+      if (failure === "network_failure")
+        fetchToken.mockRejectedValue(new Error("synthetic failure"));
+      else
+        fetchToken.mockResolvedValue(
+          Response.json({ error: failure }, { status: 401 }),
+        );
+      expect(
+        (
+          await createOAuthCallback(
+            () => config,
+            fetchToken,
+          )(request("?code=single-use-synthetic"))
+        ).status,
+      ).toBe(502);
+      expect(fetchToken).toHaveBeenCalledTimes(1);
+    },
+  );
+});

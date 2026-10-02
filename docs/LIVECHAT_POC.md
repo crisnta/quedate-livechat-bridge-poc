@@ -1,5 +1,7 @@
 # Quédate LiveChat Bridge POC
 
+Este documento conserva decisiones y restricciones del desarrollo inicial. El responsable informó posteriormente recepción real y despliegue; la sección 25 documenta la evolución actual. Las instrucciones pendientes del POC inicial no implican que esta tarea haya accedido a las cuentas ni comprobado su configuración. El aislamiento sigue requiriendo evidencia antes de ampliar tráfico.
+
 ## 1. Objetivo
 
 Validar recepción, autenticidad, identificación de chat/thread/evento, autor, texto, fechas, persistencia y visualización. El desarrollo del agente IA pertenece a otro proyecto/equipo.
@@ -33,9 +35,9 @@ Next.js 16 App Router, TypeScript, React, `pg`, Zod. Runtime Node.js. `src/proxy
 
 Se añadieron `handler.ts` para probar el receptor sin levantar Next, `require-lab.ts` como segunda comprobación de acceso, `normalization_errors` para diagnóstico, scripts de migración/fixtures y un interruptor de recepción. Son ajustes a la estructura aprobada.
 
-## 6. Configuración de LiveChat — PENDIENTE
+## 6. Configuración de LiveChat — registro inicial
 
-No se ha accedido a la cuenta ni registrado suscripciones. La documentación oficial consultada muestra `secret_key` en el JSON, `organization_id`, `webhook_id`, `action` y `payload`. No se implementan firmas HMAC inventadas.
+El registro inicial de este documento describía la preparación sin acceso a la cuenta ni alta de suscripciones. Posteriormente el responsable informó que OAuth, recepción real y persistencia ya están funcionando. En la entrega del Centro Operacional no se accede a la cuenta ni se modifican suscripciones. La documentación oficial consultada muestra `secret_key` en el JSON, `organization_id`, `webhook_id`, `action` y `payload`. No se implementan firmas HMAC inventadas.
 
 La versión de API y su disponibilidad deben comprobarse y registrarse al configurar la app. Las referencias consultadas exponen v3.6 estable; los fixtures no constituyen evidencia del formato de esta cuenta.
 
@@ -63,7 +65,7 @@ Si se opta por Configuration API, el registro/listado documenta `webhooks.config
 
 ## 9. Webhooks configurados
 
-**Ninguno real.** Preparados: `incoming_chat` e `incoming_event`. URL futura: `https://<dominio-poc>/api/webhooks/livechat`. Elegir el mismo secreto personalizado para ambas suscripciones; de no ser posible, adaptar configuración antes del alta.
+Según la actualización informada por el responsable, se reciben realmente `incoming_chat` e `incoming_event`. La entrega inicial dejó preparados: `incoming_chat` e `incoming_event`. URL futura: `https://<dominio-poc>/api/webhooks/livechat`. Elegir el mismo secreto personalizado para ambas suscripciones; de no ser posible, adaptar configuración antes del alta.
 
 Obtener `organization_id` de la configuración de la organización mediante un mecanismo oficial confirmado en la cuenta; no confundirlo con el license ID ni inferirlo. Obtener IDs de suscripción de consola o listado oficial. No confiar en valores de una solicitud no autenticada para configurar allowlists.
 
@@ -132,7 +134,7 @@ Esquema privado sin grants a PUBLIC y tablas con RLS. El propietario PostgreSQL 
 
 ## 16. Despliegue
 
-Seguir README: migración explícita, pooler de transacciones con TLS, variables privadas, build Next.js y URL estable. No hay migraciones durante build ni secretos incrustados. Separar entornos. La protección global de Vercel no debe impedir los POST sintéticos autorizados; Basic solo corresponde al laboratorio.
+Seguir README: migración explícita, pooler de transacciones con TLS, variables privadas, build Next.js y URL estable. No hay migraciones durante build ni secretos incrustados. Separar entornos. La protección global de Vercel no debe impedir los POST sintéticos autorizados; Basic también protege la nueva consola y su API de lectura.
 
 ## 17. Casos de prueba
 
@@ -148,7 +150,7 @@ Ver `docs/TEST_RESULTS.md` para resultados ejecutados. La prueba automatizada us
 
 ## 19. Payloads observados
 
-**Ninguno de LiveChat.** Los JSON del repositorio son fixtures sintéticos basados en documentación. La sección se completará solo con capturas del POC debidamente redactadas. No hay eventos clínicos ni credenciales reales en el repositorio.
+El responsable informó que ya existen payloads reales observados en PostgreSQL. No se consultaron ni copiaron estos payloads al repositorio durante la implementación del Centro Operacional. Los JSON en tests/fixtures continúan siendo fixtures sintéticos; no se renombran como reales. Documentar las capturas autorizadas y debidamente redactadas por separado, sin credenciales ni información sensible.
 
 ## 20. Problemas y decisiones técnicas
 
@@ -192,4 +194,18 @@ El futuro agente IA consumiría `InternalChatEvent v1`, no JSON LiveChat. Antes 
 
 ## 24. Actualización OAuth de instalación (2026-10-01)
 
-Se agregó el callback server-side de autorización y las variables `LIVECHAT_CLIENT_ID`, `LIVECHAT_CLIENT_SECRET`, `LIVECHAT_OAUTH_REDIRECT_URI`. El intercambio usa el endpoint oficial de tokens, muestra únicamente la organización recibida y descarta los tokens. No se cambiaron receptor, tablas ni laboratorio. Ver [LIVECHAT_OAUTH.md](LIVECHAT_OAUTH.md). La configuración real y el aislamiento siguen pendientes.
+Se agregó el callback server-side de autorización y las variables `LIVECHAT_CLIENT_ID`, `LIVECHAT_CLIENT_SECRET`, `LIVECHAT_OAUTH_REDIRECT_URI`. El intercambio usa el endpoint oficial de tokens, muestra únicamente la organización recibida y descarta los tokens. No se cambiaron receptor, tablas ni laboratorio. Ver [LIVECHAT_OAUTH.md](LIVECHAT_OAUTH.md). El responsable informó posteriormente que el callback y la recepción real están desplegados. La evidencia de aislamiento debe conservarse; esta actualización no la certifica.
+
+## 25. Centro Operacional (2026-10-02)
+
+Se implementaron dashboard, monitor operacional, conversaciones/timeline, reportes básicos, auditoría, eventos técnicos, grupos/agentes observados y alertas técnicas. Categorías/IA/protocolos son estructuras visuales pendientes. Ver [OPERATIONS_CONSOLE.md](OPERATIONS_CONSOLE.md) para el diseño final, fuentes y matriz métrica → fuente → cálculo → disponibilidad.
+
+No se modifica receptor, OAuth, normalización, idempotencia, escrituras, tablas ni migraciones. Se agrega un lector SQL parametrizado por organización y período. Las listas no cargan raw_payload; solo detalle técnico lo devuelve. El timeline proyecta mensajes de snapshots en SQL, sin enviar el JSON completo. Los datos del visitante permanecen ocultos inicialmente; no se muestra IP.
+
+La protección Basic temporal se amplía a todas las rutas operacionales y `/api/operations/*`; webhook y OAuth conservan acceso independiente. RBAC / autenticación real pendiente antes de entregar acceso formal a una contraparte.
+
+Polling de cinco segundos después de cada consulta, sin solapamiento ni requests en pestaña oculta, con 304 y backoff. Se separan consulta exitosa de PostgreSQL, última entrega y actividad de origen; nunca se declara LiveChat conectado por actividad reciente.
+
+No se determinan cierres/espera/asignación/presencia ni duración final. chat_deactivated es el siguiente webhook propuesto para cierres reales; chat_transferred será una señal futura de derivaciones. Deben agregarse en tarea independiente con documentación oficial y pruebas, sin habilitarlos en esta entrega.
+
+Verificaciones locales: 70 tests, HTTP completo con PostgreSQL temporal, typecheck y build aprobados. No hubo acceso a Supabase alojado ni LiveChat durante esta tarea.

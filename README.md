@@ -2,7 +2,7 @@
 
 Receptor y observador de `incoming_chat` / `incoming_event`. Next.js + TypeScript + PostgreSQL en Supabase. Sin IA, respuestas automáticas ni escritura a LiveChat. Repositorio independiente de Salud 360.
 
-**Activación real BLOQUEADA:** aún no se ha comprobado el aislamiento del tráfico de pruebas. No registrar webhooks de la operación real. `WEBHOOK_INGESTION_ENABLED=false` es el valor inicial. Habilitarlo para fixtures no certifica aislamiento.
+La consola **Quédate · Centro Operacional** agrega monitoreo, conversaciones, reportes y auditoría de solo lectura. El responsable informó que el flujo real ya está probado; esta entrega verifica el código con PostgreSQL temporal y no accede a las cuentas alojadas. El aislamiento debe conservar su evidencia antes de ampliar suscripciones; no se configura LiveChat en esta tarea.
 
 ## Requisitos
 
@@ -74,11 +74,11 @@ Los tests crean un PostgreSQL temporal local, aplican la migración y prueban el
 5. Comprobar el laboratorio por HTTPS y ejecutar `npm run fixtures:send -- https://TU-PROYECTO.vercel.app` desde el entorno local sintético correspondiente.
 6. Repetir el envío; verificar conteo de entregas y persistencia tras refresh y redeploy.
 
-La protección global de Vercel puede bloquear las pruebas de POST: configurar el acceso del despliegue de POC conscientemente. Basic protege exclusivamente el laboratorio; el webhook se autentica con su secreto. No colocar secretos en URLs. Separar base/credenciales de previews. Las migraciones no corren automáticamente durante el build.
+La protección global de Vercel puede bloquear las pruebas de POST: configurar el acceso del despliegue de POC conscientemente. Basic protege el laboratorio, la consola y `/api/operations/*`; el webhook se autentica con su secreto. No colocar secretos en URLs. Separar base/credenciales de previews. Las migraciones no corren automáticamente durante el build.
 
 ## Estado y siguientes pasos
 
-Implementación y pruebas sintéticas locales; conexión a Supabase, despliegue Vercel y payloads reales pendientes de ejecución por el responsable de las cuentas. Seguir [la documentación técnica](docs/LIVECHAT_POC.md) para evidencias, límites y configuración manual de LiveChat.
+Bridge y flujo real validados según lo informado por el responsable; Centro Operacional implementado y verificado con pruebas sintéticas locales. La validación de los nuevos módulos contra el despliegue alojado corresponde al responsable. Seguir [la documentación técnica](docs/LIVECHAT_POC.md) para evidencias, límites y configuración manual de LiveChat.
 
 ## Instalación privada: callback OAuth de LiveChat
 
@@ -99,3 +99,13 @@ La respuesta muestra autorización exitosa y el `organization_id` recibido desde
 La autorización exitosa no prueba el aislamiento ni la recepción. Instalar una app con suscripciones ya configuradas puede habilitarlas: mantener el requisito bloqueante de aislamiento antes de instalar contra la operación real. Este cambio no registra ni activa suscripciones por código.
 
 Pruebas OAuth usan respuestas simuladas y credenciales sintéticas; no realizan llamadas a LiveChat. Ver [docs/LIVECHAT_OAUTH.md](docs/LIVECHAT_OAUTH.md) para configuración, límites y referencias.
+
+## Centro Operacional
+
+Abrir `/dashboard` con las mismas credenciales Basic temporales. Navegación: resumen, monitor operacional (polling cada 5 segundos, suspendido en pestañas ocultas), conversaciones y detalle, reportes, auditoría, eventos técnicos, grupos, agentes y alertas técnicas. Categorías, IA y protocolos muestran Próximamente. `/webhook-lab` sigue operativo.
+
+Se reutilizan las tablas actuales y las variables existentes; **no hay nuevas migraciones ni dependencias**. Las consultas nuevas limitan organización con `LIVECHAT_ORGANIZATION_ID`; listas sin raw_payload, alias/correo ocultos inicialmente en detalle y JSON completo solo en vistas técnicas. Métricas por recepción en America/Santiago; no se inventan estados, aperturas/cierres, presencia ni tiempos de respuesta.
+
+**RBAC / autenticación real pendiente antes de entregar acceso formal a una contraparte.** Basic no constituye multiusuario ni separación de permisos.
+
+Ver [OPERATIONS_CONSOLE.md](docs/OPERATIONS_CONSOLE.md) para módulos, queries, matriz de métricas, privacidad, polling, pruebas y fases. Próximas señales propuestas: chat_deactivated para cierres, chat_transferred para derivaciones, ambas en tareas separadas.

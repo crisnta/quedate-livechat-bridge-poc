@@ -41,3 +41,14 @@ No se afirma recepción real ni aceptación contra Supabase. La siguiente eviden
 - `npm run build`: aprobado, incluido TypeScript.
 - Tests adicionales: HTTP status/error/error_description, presencia de variables, redirect seguro, rechazo de cuerpos no JSON/excesivos, escape HTML y redacción de valores conocidos/credenciales repetidos en errores.
 - Las respuestas del proveedor son simuladas; no se probó el error de la cuenta real ni se usaron secretos reales.
+
+## Centro Operacional — 2026-10-02
+
+- `npm test`: **70 tests aprobados**: 24 Bridge, 28 OAuth existentes, 14 lectura operacional/PostgreSQL y 4 polling.
+- `npm run typecheck`: aprobado. Se eliminó únicamente cache local de tipos de Next obsoleto y tsbuildinfo antes de regenerarlos; no se deshabilitó ningún chequeo.
+- `npm run build`: aprobado, con todas las rutas nuevas y rutas heredadas.
+- HTTP contra Next de producción + PostgreSQL temporal: 14 páginas operacionales protegidas y renderizadas; API monitor 200/304/400/401/503, datos del visitante ocultos, acceso explícito al detalle personal, HTML escapado, redacción técnica y laboratorio original operativo.
+- Consultas probadas: sin raw_payload en listas, organización parametrizada, filtros literales, paginación de chats/eventos/timeline, Santiago con offsets estacionales, varios threads, snapshots sin duplicar mensajes, autores desconocidos, datos parciales y duplicados.
+- Polling: cinco segundos, sin solapamiento, suspensión de pestaña oculta, aborto/limpieza y backoff.
+- Revisión visual local del dashboard y del monitor con datos **sintéticos** en una base temporal; selección de chat y pausa comprobadas en navegador.
+- No se usaron secretos reales ni se accedió a Supabase alojado, Developer Console o LiveChat durante esta entrega. No se ejecutaron migraciones nuevas. La validación externa que el responsable informó previamente no se vuelve a certificar mediante estos tests.

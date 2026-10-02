@@ -1,4 +1,4 @@
-import { redact } from "@/lib/livechat/validation";
+import { redactForDisplay } from "@/lib/operations/privacy";
 export function PayloadViewer({ payload }: { payload: unknown }) {
   return (
     <section>
@@ -7,7 +7,7 @@ export function PayloadViewer({ payload }: { payload: unknown }) {
         secret_key reemplazado antes de persistir. El JSON se muestra como
         texto.
       </p>
-      <pre>{JSON.stringify(redact(payload), null, 2)}</pre>
+      <pre>{JSON.stringify(redactForDisplay(payload), null, 2)}</pre>
     </section>
   );
 }

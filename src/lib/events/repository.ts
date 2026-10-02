@@ -112,7 +112,7 @@ export async function listEvents(
     );
   }
   const result = await database().query(
-    `SELECT * FROM bridge.webhook_events ${clauses.length ? "WHERE " + clauses.join(" AND ") : ""} ORDER BY received_at DESC,id DESC LIMIT 50`,
+    `SELECT id,organization_id,webhook_id,action,chat_id,thread_id,event_id,event_type,author_id,author_type,text,created_at,received_at,deduplication_key,delivery_count,last_received_at,normalization_status,normalization_errors,normalization_version FROM bridge.webhook_events ${clauses.length ? "WHERE " + clauses.join(" AND ") : ""} ORDER BY received_at DESC,id DESC LIMIT 50`,
     params,
   );
   return result.rows;

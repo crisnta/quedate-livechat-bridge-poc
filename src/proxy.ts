@@ -9,4 +9,21 @@ export function proxy(request: NextRequest) {
   response.headers.set("X-Content-Type-Options", "nosniff");
   return response;
 }
-export const config = { matcher: ["/webhook-lab/:path*"] };
+export const config = {
+  matcher: [
+    "/webhook-lab/:path*",
+    "/dashboard/:path*",
+    "/monitor/:path*",
+    "/conversations/:path*",
+    "/reports/:path*",
+    "/audit/:path*",
+    "/technical/:path*",
+    "/groups/:path*",
+    "/agents/:path*",
+    "/alerts/:path*",
+    "/categories/:path*",
+    "/ai/:path*",
+    "/protocols/:path*",
+    "/api/operations/:path*",
+  ],
+};
